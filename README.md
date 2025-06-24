@@ -20,7 +20,7 @@ runs:
 
 
 4. Modificar el fichero workflow.yml:
-   - Nombrar el flujo de trabajo 11 Custom Actions - Composite.
+   - Nombrar el flujo de trabajo Custom Actions - Composite.
    - desencadenantes:
      - workflow_dispatch:   
    - Trabajos:
