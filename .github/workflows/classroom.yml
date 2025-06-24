@@ -19,75 +19,31 @@ jobs:
         id: get_workflow
         uses: madBabel/get-run-id-of-wf-action@v2
         with:
-            workflow-file: '03-workflow-runners.yaml'    
+            workflow-file: 'workflow.yml'    
             status: 'success'
 
   checkJobs:   
     needs: get-workflow-id
     runs-on: ubuntu-latest    
     outputs: 
-      ubuntuExecuted: ${{steps.check_Steps_for_ubuntu_echo.outputs.stepsExecuted}}
-      windowsExecuted: ${{steps.check_Steps_for_windows_echo.outputs.stepsExecuted}}
-      macExecuted: ${{steps.check_Steps_for_mac_echo.outputs.stepsExecuted}}
+      ubuntuExecuted: ${{steps.check_Steps_for_build.outputs.stepsExecuted}}      
     steps:     
 
-      - name: Check step executed for ubuntu-echo
-        id: check_Steps_for_ubuntu_echo
+      - name: Check step executed for build
+        id: check_Steps_for_build
         uses: madBabel/check-jobs-steps-gha-action@v3
         with:
           run-id: ${{needs.get-workflow-id.outputs.run_id}}
-          job-to-execute: ubuntu-echo      
-        
-      - name: Check step executed for windows-echo
-        id: check_Steps_for_windows_echo
-        uses: madBabel/check-jobs-steps-gha-action@v3
-        with:
-          run-id: ${{needs.get-workflow-id.outputs.run_id}}
-          job-to-execute: windows-echo    
-
-      - name: Check step executed for mac-echo
-        id: check_Steps_for_mac_echo
-        uses: madBabel/check-jobs-steps-gha-action@v3
-        with:
-          run-id: ${{needs.get-workflow-id.outputs.run_id}}
-          job-to-execute: mac-echo      
+          job-to-execute: build
+          steps-to-execute: Build Node
+             
           
 
   autograding-reporter:    
       needs: [checkJobs,get-workflow-id]
       runs-on: ubuntu-latest    
       steps:           
-      - name: Run Autograding Step Tests for ub-echo
-        uses: classroom-resources/autograding-io-grader@v1      
-        id: test1
-        with:
-            test-name: 'Test Step executed'   
-            command: 'echo ${{needs.checkJobs.outputs.ubuntuExecuted}}'
-            input: ''
-            expected-output: 'true'
-            comparison-method: 'exact'  
-            max-score: 12
-      - name: Run Autograding Step Tests for win-echo
-        uses: classroom-resources/autograding-io-grader@v1      
-        id: test2
-        with:
-            test-name: 'Test Step executed'   
-            command: 'echo ${{needs.checkJobs.outputs.windowsExecuted}}'
-            input: ''
-            expected-output: 'true'
-            comparison-method: 'exact'  
-            max-score: 12 
-      - name: Run Autograding Step Tests for mac-echo
-        uses: classroom-resources/autograding-io-grader@v1      
-        id: test3
-        with:
-            test-name: 'Test Step executed'   
-            command: 'echo ${{needs.checkJobs.outputs.macExecuted}}'
-            input: ''
-            expected-output: 'true'
-            comparison-method: 'exact'  
-            max-score: 16 
-
+   
       - name: Get logs of the latest workflow run
         id: get_logs
         uses: actions/github-script@v6
@@ -116,48 +72,22 @@ jobs:
           unzip downloaded_file.zip -d unzipped_files
           ls unzipped_files
 
-      - name: Run Autograding Tests for console unbuntu
+      - name: Run Autograding Tests for Node
         uses: classroom-resources/autograding-io-grader@v1      
-        id: test4
+        id: test1
         with:
-            test-name: 'Test ubuntu in logs'   
-            command: 'tail -n3 unzipped_files/ubuntu*/*Mostrar*SO*.txt'
+            test-name: 'Test executed in Composite action'   
+            command: 'tail -n500 unzipped_files/build*/*Build*Node*.txt'
             input: 'OK'
-            expected-output: '.*Runner de Ubuntu.+[\n]*.*Linux.*'
+            expected-output: '.*Test Suites: 1 passed*'
             comparison-method: 'regex'
-            max-score: 20     
-
-      - name: Run Autograding Tests for console windows
-        uses: classroom-resources/autograding-io-grader@v1      
-        id: test5
-        with:
-            test-name: 'Test windows in logs'   
-            command: 'tail -n3 unzipped_files/windows*/*Mostrar*SO.txt'
-            input: 'OK'
-            expected-output: '.*Runner de Windows.+[\n]*.*Windows.*'
-            comparison-method: 'regex'
-            max-score: 20   
-        
-
-      - name: Run Autograding Tests for console mac
-        uses: classroom-resources/autograding-io-grader@v1      
-        id: test6
-        with:
-            test-name: 'Test mac in logs'   
-            command: 'tail -n3 unzipped_files/mac*/*Mostrar*SO*.txt'
-            input: 'OK'
-            expected-output: '.*Runner de MacOS.+[\n]*.*macOS.*'
-            comparison-method: 'regex'
-            max-score: 20  
+            max-score: 100     
+    
             
       - name: Autograding Reporter
         uses: classroom-resources/autograding-grading-reporter@v1     
         with:
-           runners: test1,test2,test3,test4,test5,test6
+           runners: test1
         env:
           TEST1_RESULTS: "${{ steps.test1.outputs.result }}"
-          TEST2_RESULTS: "${{ steps.test2.outputs.result }}"   
-          TEST3_RESULTS: "${{ steps.test3.outputs.result }}"   
-          TEST4_RESULTS: "${{ steps.test4.outputs.result }}"   
-          TEST5_RESULTS: "${{ steps.test5.outputs.result }}"   
-          TEST6_RESULTS: "${{ steps.test6.outputs.result }}"     
+         
